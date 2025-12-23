@@ -1,0 +1,95 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Classic T-Shirt",
+      "price": 29.99,
+      "originalPrice": 39.99,
+      "description": "Comfortable cotton t-shirt perfect for everyday wear.",
+      "image": "/placeholder.jpg",
+      "category": "tshirts",
+      "sizes": ["S", "M", "L", "XL"],
+      "colors": ["Black", "White", "Gray"],
+      "rating": 4.5,
+      "reviews": 128
+    },
+    {
+      "id": 2,
+      "name": "Slim Fit Shirt",
+      "price": 49.99,
+      "originalPrice": 59.99,
+      "description": "Stylish slim fit shirt for formal occasions.",
+      "image": "/placeholder.jpg",
+      "category": "shirts",
+      "sizes": ["M", "L", "XL"],
+      "colors": ["Blue", "White", "Black"],
+      "rating": 4.2,
+      "reviews": 95
+    },
+    {
+      "id": 3,
+      "name": "Chinos Pants",
+      "price": 59.99,
+      "originalPrice": 69.99,
+      "description": "Versatile chinos pants for casual and semi-formal wear.",
+      "image": "/placeholder.jpg",
+      "category": "pants",
+      "sizes": ["M", "L", "XL"],
+      "colors": ["Beige", "Navy", "Black"],
+      "rating": 4.8,
+      "reviews": 67
+    },
+    {
+      "id": 4,
+      "name": "Nightwear Set",
+      "price": 39.99,
+      "originalPrice": 49.99,
+      "description": "Comfortable nightwear set for relaxed evenings.",
+      "image": "/placeholder.jpg",
+      "category": "nightwear",
+      "sizes": ["S", "M", "L"],
+      "colors": ["Gray", "Blue"],
+      "rating": 4.0,
+      "reviews": 42
+    },
+    {
+      "id": 5,
+      "name": "Leather Wallet",
+      "price": 24.99,
+      "originalPrice": 29.99,
+      "description": "Genuine leather wallet with multiple compartments.",
+      "image": "/placeholder.jpg",
+      "category": "wallets",
+      "sizes": [],
+      "colors": ["Black", "Brown"],
+      "rating": 4.3,
+      "reviews": 156
+    },
+    {
+      "id": 6,
+      "name": "Belt",
+      "price": 19.99,
+      "originalPrice": 24.99,
+      "description": "Classic leather belt to complement any outfit.",
+      "image": "/placeholder.jpg",
+      "category": "belts",
+      "sizes": ["32", "34", "36", "38"],
+      "colors": ["Black", "Brown"],
+      "rating": 4.1,
+      "reviews": 89
+    },
+    {
+      "id": 7,
+      "name": "Sunglasses",
+      "price": 34.99,
+      "originalPrice": 44.99,
+      "description": "Stylish sunglasses with UV protection.",
+      "image": "/placeholder.jpg",
+      "category": "sunglasses",
+      "sizes": [],
+      "colors": ["Black", "Gold"],
+      "rating": 4.6,
+      "reviews": 203
+    }
+  ]
+}
