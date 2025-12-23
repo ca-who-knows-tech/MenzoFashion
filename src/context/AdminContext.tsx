@@ -49,11 +49,39 @@ export interface Offer {
   active?: boolean;
 }
 
+export interface Order {
+  id: number | string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  items: Array<{
+    productId: number | string;
+    productName: string;
+    quantity: number;
+    price: number;
+    size?: string;
+    color?: string;
+  }>;
+  total: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shippingAddress: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+  };
+  paymentMethod?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 interface AdminContextType {
   // Data
   categories: Category[];
   products: Product[];
   offers: Offer[];
+  orders: Order[];
   loading: boolean;
   error: string | null;
   
@@ -61,6 +89,7 @@ interface AdminContextType {
   refreshCategories: () => Promise<void>;
   refreshProducts: () => Promise<void>;
   refreshOffers: () => Promise<void>;
+  refreshOrders: () => Promise<void>;
   refreshAll: () => Promise<void>;
   
   // Category CRUD
@@ -77,6 +106,10 @@ interface AdminContextType {
   addOffer: (offer: Omit<Offer, 'id'>) => Promise<Offer | null>;
   updateOffer: (id: number | string, offer: Partial<Offer>) => Promise<Offer | null>;
   deleteOffer: (id: number | string) => Promise<boolean>;
+  
+  // Order management
+  updateOrderStatus: (id: number | string, status: Order['status']) => Promise<Order | null>;
+  deleteOrder: (id: number | string) => Promise<boolean>;
   
   // Helpers
   getCategoryBySlug: (slug: string) => Category | undefined;
@@ -104,6 +137,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -144,17 +178,29 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, []);
 
+  const refreshOrders = useCallback(async () => {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders`);
+      if (!res.ok) throw new Error('Failed to fetch orders');
+      const data = await res.json();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (e: any) {
+      console.error('Error loading orders:', e);
+      setError(e.name === 'AbortError' ? 'Order request timed out' : e.message);
+    }
+  }, []);
+
   const refreshAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      await Promise.all([refreshCategories(), refreshProducts(), refreshOffers()]);
+      await Promise.all([refreshCategories(), refreshProducts(), refreshOffers(), refreshOrders()]);
     } catch (e: any) {
       setError(e?.message || 'Failed to load admin data');
     } finally {
       setLoading(false);
     }
-  }, [refreshCategories, refreshProducts, refreshOffers]);
+  }, [refreshCategories, refreshProducts, refreshOffers, refreshOrders]);
 
   // Initial load
   useEffect(() => {
@@ -394,15 +440,48 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return false;
     }
   }, [refreshOffers]);
+
+  // Order management
+  const updateOrderStatus = useCallback(async (id: number | string, status: Order['status']): Promise<Order | null> => {
+    try {
+      const res = await fetch(`${API_BASE}/orders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, updatedAt: new Date().toISOString() }),
+      });
+      if (!res.ok) throw new Error('Failed to update order status');
+      const updated = await res.json();
+      await refreshOrders();
+      return updated;
+    } catch (e: any) {
+      setError(e.message);
+      return null;
+    }
+  }, [refreshOrders]);
+
+  const deleteOrder = useCallback(async (id: number | string): Promise<boolean> => {
+    try {
+      const res = await fetch(`${API_BASE}/orders/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete order');
+      await refreshOrders();
+      return true;
+    } catch (e: any) {
+      setError(e.message);
+      return false;
+    }
+  }, [refreshOrders]);
+
   const value: AdminContextType = {
     categories,
     products,
     offers,
+    orders,
     loading,
     error,
     refreshCategories,
     refreshProducts,
     refreshOffers,
+    refreshOrders,
     refreshAll,
     addCategory,
     updateCategory,
@@ -413,6 +492,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     addOffer,
     updateOffer,
     deleteOffer,
+    updateOrderStatus,
+    deleteOrder,
     getCategoryBySlug,
     getProductById,
     getProductsByCategory,
