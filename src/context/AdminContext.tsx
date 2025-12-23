@@ -2,6 +2,18 @@ import React, { createContext, useContext, useState, useCallback, useEffect, Rea
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
+// Simple fetch helper with an abort-based timeout so the UI does not hang indefinitely when the API is unreachable.
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeoutMs = 8000) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 // Types
 export interface Category {
   slug: string;
@@ -98,45 +110,50 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Refresh functions
   const refreshCategories = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/categories`);
+      const res = await fetchWithTimeout(`${API_BASE}/categories`);
       if (!res.ok) throw new Error('Failed to fetch categories');
       const data = await res.json();
       setCategories(Array.isArray(data) ? data : []);
     } catch (e: any) {
       console.error('Error loading categories:', e);
-      setError(e.message);
+      setError(e.name === 'AbortError' ? 'Category request timed out' : e.message);
     }
   }, []);
 
   const refreshProducts = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/products`);
+      const res = await fetchWithTimeout(`${API_BASE}/products`);
       if (!res.ok) throw new Error('Failed to fetch products');
       const data = await res.json();
       setProducts(Array.isArray(data) ? data : []);
     } catch (e: any) {
       console.error('Error loading products:', e);
-      setError(e.message);
+      setError(e.name === 'AbortError' ? 'Product request timed out' : e.message);
     }
   }, []);
 
   const refreshOffers = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/offers`);
+      const res = await fetchWithTimeout(`${API_BASE}/offers`);
       if (!res.ok) throw new Error('Failed to fetch offers');
       const data = await res.json();
       setOffers(Array.isArray(data) ? data : []);
     } catch (e: any) {
       console.error('Error loading offers:', e);
-      setError(e.message);
+      setError(e.name === 'AbortError' ? 'Offer request timed out' : e.message);
     }
   }, []);
 
   const refreshAll = useCallback(async () => {
     setLoading(true);
     setError(null);
-    await Promise.all([refreshCategories(), refreshProducts(), refreshOffers()]);
-    setLoading(false);
+    try {
+      await Promise.all([refreshCategories(), refreshProducts(), refreshOffers()]);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to load admin data');
+    } finally {
+      setLoading(false);
+    }
   }, [refreshCategories, refreshProducts, refreshOffers]);
 
   // Initial load

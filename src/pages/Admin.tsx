@@ -18,14 +18,50 @@ import {
 // ============ Tab Navigation ============
 type TabType = 'categories' | 'products' | 'offers' | 'overview';
 
+const ADMIN_PASSWORD = 'Priya123@at';
+
 const Admin: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const { loading, error, refreshAll, categories, products, offers } = useAdmin();
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('menzo_admin_auth') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
 
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 4000);
+  };
+
+  const handleAuth = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === ADMIN_PASSWORD) {
+      setIsAuthorized(true);
+      setAuthError('');
+      try {
+        localStorage.setItem('menzo_admin_auth', 'true');
+      } catch (err) {
+        // ignore storage failures; session stays in memory
+      }
+    } else {
+      setAuthError('Incorrect password');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthorized(false);
+    setPasswordInput('');
+    try {
+      localStorage.removeItem('menzo_admin_auth');
+    } catch (err) {
+      // ignore storage failures
+    }
   };
 
   const tabs: { key: TabType; label: string; icon: React.ReactNode; count?: number }[] = [
@@ -34,6 +70,40 @@ const Admin: React.FC = () => {
     { key: 'products', label: 'Products', icon: <ShoppingBagIcon className="h-5 w-5" />, count: products.length },
     { key: 'offers', label: 'Offers', icon: <SparklesIcon className="h-5 w-5" />, count: offers.length },
   ];
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <Helmet>
+          <title>Admin Access — Menzo Fashion</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="w-full max-w-md bg-white border rounded-2xl shadow-lg p-6 space-y-4">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">Enter Admin Password</h1>
+            <p className="text-sm text-gray-500">This gate keeps the dashboard private. Share only with trusted staff.</p>
+          </div>
+          <form className="space-y-3" onSubmit={handleAuth}>
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              placeholder="Password"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              autoFocus
+            />
+            {authError && <p className="text-sm text-red-600">{authError}</p>}
+            <button
+              type="submit"
+              className="w-full py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition"
+            >
+              Unlock Dashboard
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -50,14 +120,22 @@ const Admin: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
               <p className="text-sm text-gray-500">Manage your store data</p>
             </div>
-            <button
-              onClick={() => refreshAll()}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 transition"
-            >
-              <ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh All
-            </button>
+            <div className="flex items-center">
+              <button
+                onClick={() => refreshAll()}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 transition"
+              >
+                <ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh All
+              </button>
+              <button
+                onClick={handleLogout}
+                className="ml-3 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Lock
+              </button>
+            </div>
           </div>
         </div>
       </header>
