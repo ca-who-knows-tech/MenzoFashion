@@ -10,3 +10,5 @@ dist
 .vscode/
 .idea/
 Thumbs.db
+.vercel
+.env*.local
