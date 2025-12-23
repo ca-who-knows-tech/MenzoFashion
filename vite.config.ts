@@ -12,7 +12,7 @@ export default defineConfig({
       manifest: {
         name: 'Menzo Fashion',
         short_name: 'Menzo',
-        start_url: '/MenzoFashion/',
+        start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#fbbf24',
@@ -28,5 +28,5 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/MenzoFashion/',
+  base: '/',
 })
